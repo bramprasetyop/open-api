@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  eli-open-api:
+    container_name: eli-open-api
+    # image: docker-image:tag
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - '10077:10077'
+    volumes:
+      - ./src:/app/src
+      - ./public/uploads:/app/public/uploads
+      - ./logs:/app/logs
+    networks:
+      - my-ebenefit-network
+      - api-myebenefit-cms_webnet
+
+networks:
+  my-ebenefit-network:
+    name: my-ebenefit-network
+    external: false
+  api-myebenefit-cms_webnet:
+    name: api-myebenefit-cms_webnet
+    external: true
