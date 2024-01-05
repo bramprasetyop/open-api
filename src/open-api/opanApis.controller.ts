@@ -122,17 +122,20 @@ export class OpenApisController {
   }
 
   @Post('/signature')
-  async generateSignature(@Body() body: { clientId: string }): Promise<any> {
+  async generateSignature(
+    @Body() body: { clientId: string; timestamp: string }
+  ): Promise<any> {
     try {
-      const { clientId } = body;
-      return await this.openApi.generateSignature(clientId);
+      const { clientId, timestamp } = body;
+      return await this.openApi.generateSignature(clientId, timestamp);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }
   }
 
   @Post('/access-token')
-  async generateTokenBank(
+  async generateAccessToken(
+    @Headers('X-TIMESTAMP') timestamp: string,
     @Headers('X-CLIENT-ID') clientId: string,
     @Headers('X-SIGNATURE') signature: string,
     @Body() body: { grantType: string }
@@ -142,7 +145,8 @@ export class OpenApisController {
       const generateAccessTokenData = {
         clientId,
         signature,
-        grantType
+        grantType,
+        timestamp
       };
       return await this.openApi.generateAccessToken(generateAccessTokenData);
     } catch (error) {
@@ -153,6 +157,7 @@ export class OpenApisController {
   @UseGuards(JwtAuthGuard)
   @Post('/create-symmetric-signature')
   async createSymmetricSignature(
+    @Headers('X-TIMESTAMP') timestamp: string,
     @Headers('Authorization') accessToken: string,
     @Headers('relativeUrl') relativeUrl: string,
     @Body() body: any
@@ -160,7 +165,8 @@ export class OpenApisController {
     try {
       const generateSimmetricSignatureData = {
         accessToken,
-        relativeUrl
+        relativeUrl,
+        timestamp
       };
       return await this.openApi.generateSymmetricSignature(
         generateSimmetricSignatureData,
@@ -173,7 +179,8 @@ export class OpenApisController {
 
   @Post('/claims')
   @UseGuards(JwtAuthGuard)
-  async inquiryBRI(
+  async claims(
+    @Headers('X-TIMESTAMP') timestamp: string,
     @Headers('X-CLIENT-ID') clientId: string,
     @Headers('X-SIGNATURE') signature: string,
     @Headers('Authorization') accessToken: string,
@@ -184,7 +191,8 @@ export class OpenApisController {
         relativeUrl: '/open-api/claims',
         clientId,
         accessToken,
-        signature
+        signature,
+        timestamp
       };
       return await this.openApi.claims(claimData, body);
     } catch (error) {

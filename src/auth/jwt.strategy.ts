@@ -17,7 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(data: any) {
-    const clientId = data?.payload;
+    const clientId = data.payload.split('|')[0];
     const isValid = await this.openApiRepository.findByPk(clientId);
     return isValid;
   }
