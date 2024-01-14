@@ -69,7 +69,11 @@ export class OpenApisService {
 
   private async createToken(payload: string): Promise<any> {
     const accessToken = this.jwtService.sign({ payload });
-    return { accessToken: accessToken, expired: '15 minutes' };
+    const decodedToken: any = this.jwtService.decode(accessToken, {
+      json: true
+    });
+    const expirationTimeInSeconds = decodedToken?.exp;
+    return { accessToken: accessToken, expired: expirationTimeInSeconds };
   }
 
   private async verifySignature(
@@ -482,7 +486,7 @@ export class OpenApisService {
     }
   }
 
-  async claims(data: any, body: any) {
+  async symmetricSignature(data: any, body: any) {
     try {
       const { relativeUrl, accessToken, signature, timestamp } = data;
 
@@ -501,12 +505,17 @@ export class OpenApisService {
       if (!verifySignature) {
         throw new UnauthorizedException('Unauthorized. [Signature]');
       }
+      this.logger.log(
+        '[ Success Verify Symmetric signature] : ',
+        verifySignature
+      );
+
       return {
-        status_description: 'save claim data success'
+        status_description: 'access granted'
       };
     } catch (error) {
       this.logger.error(
-        'error save claim data',
+        'error Verify Symmetric signature',
         'error ===>',
         JSON.stringify(error, null, 2)
       );

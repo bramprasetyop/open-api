@@ -54,7 +54,7 @@ export class LoggerService extends Logger {
       dirname: dateDirPath,
       filename: path.join(dateDirPath, 'error.log'),
       format: format.combine(
-        format.label({ label: 'MY EBENFIT' }),
+        format.label({ label: 'OPEN API' }),
         format.timestamp(),
         customFormat
       ),
@@ -67,7 +67,7 @@ export class LoggerService extends Logger {
       dirname: dateDirPath,
       filename: path.join(dateDirPath, 'info.log'),
       format: format.combine(
-        format.label({ label: 'MY EBENFIT' }),
+        format.label({ label: 'OPEN API' }),
         format.timestamp(),
         customFormat
       ),

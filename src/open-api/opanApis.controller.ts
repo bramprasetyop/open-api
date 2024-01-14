@@ -27,7 +27,7 @@ import {
 } from './dto';
 import { OpenApisService } from './service/openApis.service';
 
-@Controller('open-api')
+@Controller()
 @ApiTags('Open-api')
 @ApiBearerAuth()
 export class OpenApisController {
@@ -159,7 +159,7 @@ export class OpenApisController {
   async createSymmetricSignature(
     @Headers('X-TIMESTAMP') timestamp: string,
     @Headers('Authorization') accessToken: string,
-    @Headers('relativeUrl') relativeUrl: string,
+    @Headers('X-URL') relativeUrl: string,
     @Body() body: any
   ): Promise<any> {
     try {
@@ -177,24 +177,26 @@ export class OpenApisController {
     }
   }
 
-  @Post('/claims')
+  @Post('/verify-symmetric-signature')
   @UseGuards(JwtAuthGuard)
   async claims(
     @Headers('X-TIMESTAMP') timestamp: string,
     @Headers('X-CLIENT-ID') clientId: string,
     @Headers('X-SIGNATURE') signature: string,
     @Headers('Authorization') accessToken: string,
+    @Headers('X-URL') relativeUrl: string,
     @Body() body: any
   ) {
     try {
       const claimData = {
-        relativeUrl: '/open-api/claims',
+        relativeUrl,
         clientId,
         accessToken,
         signature,
         timestamp
       };
-      return await this.openApi.claims(claimData, body);
+
+      return await this.openApi.symmetricSignature(claimData, body);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }

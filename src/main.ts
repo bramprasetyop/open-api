@@ -49,7 +49,7 @@ async function bootstrap() {
   // end message queue dashboard
 
   // add api prefix
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('v1');
 
   if (process.env.NODE_ENV !== 'production') {
     // swagger documentation

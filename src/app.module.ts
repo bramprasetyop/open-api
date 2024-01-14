@@ -11,6 +11,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import * as redisStore from 'cache-manager-redis-store';
 import { join } from 'path';
 
+import { HomeController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './core/database/database.module';
 import { ResponseMiddleware } from './core/middleware';
@@ -34,6 +35,8 @@ import { OpenApisModule } from './open-api/openApis.module';
     AuthModule,
     OpenApisModule
   ],
+  controllers: [HomeController],
+
   providers: [LoggerService]
 })
 export class AppModule {
