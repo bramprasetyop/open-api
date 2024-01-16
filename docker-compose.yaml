@@ -11,12 +11,11 @@ services:
       - '3002:3002'
     volumes:
       - ./src:/app/src
-      - ./public/uploads:/app/public/uploads
       - ./logs:/app/logs
     networks:
-      - my-ebenefit-network
+      - open-api-network
 
 networks:
-  my-ebenefit-network:
-    name: my-ebenefit-network
+  open-api-network:
+    name: open-api-network
     external: false

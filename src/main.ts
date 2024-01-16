@@ -1,11 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { createBullBoard } from '@bull-board/api';
-import { BullAdapter } from '@bull-board/api/bullAdapter';
-import { ExpressAdapter } from '@bull-board/express';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Queue } from 'bull';
 import * as compression from 'compression';
 
 import { AppModule } from './app.module';
@@ -17,7 +13,6 @@ async function bootstrap() {
   checkConfigService();
 
   const app = await NestFactory.create(AppModule, { cors: true });
-  const basicAuth = require('express-basic-auth');
 
   // set using compression
   app.use(
@@ -25,28 +20,6 @@ async function bootstrap() {
       threshold: 512
     })
   );
-
-  // start message queue dashboard
-  const serverAdapter = new ExpressAdapter();
-  serverAdapter.setBasePath('/bull-dashboard');
-  const procedureQueue = app.get<Queue>(`BullQueue_openApiQueue`);
-
-  createBullBoard({
-    queues: [new BullAdapter(procedureQueue)],
-    serverAdapter
-  });
-
-  app.use(
-    '/bull-dashboard',
-    basicAuth({
-      users: {
-        admin: process.env.BULLMQ_PASS
-      },
-      challenge: true
-    }),
-    serverAdapter.getRouter()
-  );
-  // end message queue dashboard
 
   // add api prefix
   app.setGlobalPrefix('v1');

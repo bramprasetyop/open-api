@@ -6,10 +6,9 @@ export interface IDatabaseConfigAttributes {
   port?: number | string;
   dialect?: string;
   urlDatabase?: string;
+  dialectOptions?: object;
 }
 
 export interface IDatabaseConfig {
-  development: IDatabaseConfigAttributes;
-  test: IDatabaseConfigAttributes;
-  production: IDatabaseConfigAttributes;
+  db: IDatabaseConfigAttributes;
 }

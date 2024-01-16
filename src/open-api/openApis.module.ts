@@ -4,7 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { LoggerService } from '@src/core/service/logger/logger.service';
 
 import { QueueModule } from '../core/service/queue/queue.module';
-import { OpenApisController } from './opanApis.controller';
+import { OpenApisController } from './openApis.controller';
 import { openApisProviders } from './openApis.providers';
 import { OpenApiProcessor } from './processors/openApis.processor';
 import { OpenApisService } from './service/openApis.service';

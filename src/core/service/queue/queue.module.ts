@@ -16,7 +16,7 @@ import { Module } from '@nestjs/common';
         drainDelay: 30000
       },
       defaultJobOptions: {
-        attempts: 15,
+        attempts: 3,
         removeOnComplete: true,
         backoff: {
           type: 'exponential',

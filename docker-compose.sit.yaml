@@ -11,16 +11,11 @@ services:
       - '10077:10077'
     volumes:
       - ./src:/app/src
-      - ./public/uploads:/app/public/uploads
       - ./logs:/app/logs
     networks:
-      - my-ebenefit-network
-      - api-myebenefit-cms_webnet
+      - open-api-network
 
 networks:
-  my-ebenefit-network:
-    name: my-ebenefit-network
+  open-api-network:
+    name: open-api-network
     external: false
-  api-myebenefit-cms_webnet:
-    name: api-myebenefit-cms_webnet
-    external: true

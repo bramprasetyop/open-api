@@ -1,7 +1,7 @@
-import { OpenApi } from '@src/open-api/entity/openApi.entity';
+import { MOAuthKey } from '@src/open-api/entity/openApi.entity';
 import { Sequelize } from 'sequelize-typescript';
 
-import { DEVELOPMENT, PRODUCTION, SEQUELIZE, TEST } from '../constants';
+import { SEQUELIZE } from '../constants';
 import { databaseConfig } from './database.config';
 
 export const databaseProviders = [
@@ -10,17 +10,8 @@ export const databaseProviders = [
     useFactory: async () => {
       let config;
       switch (process.env.NODE_ENV) {
-        case DEVELOPMENT:
-          config = databaseConfig.development;
-          break;
-        case TEST:
-          config = databaseConfig.test;
-          break;
-        case PRODUCTION:
-          config = databaseConfig.production;
-          break;
         default:
-          config = databaseConfig.development;
+          config = databaseConfig.db;
       }
       const sequelize = new Sequelize(config);
       // Environment-specific configurations
@@ -36,11 +27,7 @@ export const databaseProviders = [
           idle: 10000
         };
       }
-      sequelize.addModels([OpenApi]);
-
-      // Enable synchronization
-      // await sequelize.sync({ force: false }); // Set force to true if you want to drop and recreate tables
-
+      sequelize.addModels([MOAuthKey]);
       return sequelize;
     }
   }

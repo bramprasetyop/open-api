@@ -5,7 +5,6 @@ import { LoggerService } from '@src/core/service/logger/logger.service';
 import { OpenApisModule } from '@src/open-api/openApis.module';
 
 import { openApisProviders } from './auth.providers';
-import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 
 @Module({
@@ -17,6 +16,6 @@ import { JwtStrategy } from './jwt.strategy';
     }),
     OpenApisModule
   ],
-  providers: [AuthService, LoggerService, JwtStrategy, ...openApisProviders]
+  providers: [LoggerService, JwtStrategy, ...openApisProviders]
 })
 export class AuthModule {}

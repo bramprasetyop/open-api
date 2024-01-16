@@ -22,30 +22,15 @@ class ConfigService {
 
 export const checkConfigService = () =>
   new ConfigService(process.env).ensureValues([
-    'CLAIM_STRATEGY',
-    'MAX_TOTAL_CLAIM',
-    'APP_URL',
     'NODE_ENV',
     'DB_HOST',
     'DB_PORT',
     'DB_USER',
     'DB_PASS',
     'DB_DIALECT',
-    'DB_NAME_TEST',
-    'DB_NAME_DEVELOPMENT',
-    'DB_NAME_PRODUCTION',
+    'DB_NAME',
     'JWT_KEY',
     'TOKEN_EXPIRATION',
     'REDIS_HOST',
-    'REDIS_PORT',
-    'MASTER_KEY',
-    'SFTP_BASE_PATH',
-    'SFTP_HOST',
-    'SFTP_PORT',
-    'SFTP_USERNAME',
-    'SFTP_PASSWORD',
-    'FHI_BASE_URL',
-    'FHI_CLIENT_CODE',
-    'FHI_KEY_TOKEN',
-    'BULLMQ_PASS'
+    'REDIS_PORT'
   ]);
