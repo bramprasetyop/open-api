@@ -65,13 +65,11 @@ export class OpenApiProcessor {
   ): Promise<boolean> {
     try {
       const clientId = data.split('|')[0];
-      console.log(clientId, 'clientId');
       const publicKey = await this.openApiRepository.findOne({
         where: {
           clientId
         }
       });
-      console.log(JSON.stringify(publicKey, null, 2), 'publicKey publicKey');
       const verify = crypto.createVerify('RSA-SHA256');
       verify.update(data);
       return verify.verify(publicKey?.publicKey, signature, 'base64');
@@ -134,8 +132,6 @@ export class OpenApiProcessor {
         }
       });
 
-      console.log(JSON.stringify(client, null, 2));
-
       if (!client) {
         throw new NotFoundException('Unauthorized. [Unknown client]');
       }
@@ -176,13 +172,10 @@ export class OpenApiProcessor {
       const stringToSign = `${clientId}|${timestamp}`;
       const isVerify = await this.verifySignature(stringToSign, signature);
 
-      console.log(isVerify, 'isVerify');
-
       if (!isVerify) {
         throw new NotFoundException('Unauthorized. [X-SIGNATURE]');
       }
       const token = await this.createToken(stringToSign);
-      console.log(token, 'token');
       return token;
     } catch (error) {
       this.logger.error(
