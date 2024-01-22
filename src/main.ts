@@ -21,9 +21,6 @@ async function bootstrap() {
     })
   );
 
-  // add api prefix
-  app.setGlobalPrefix('v1');
-
   if (process.env.NODE_ENV !== 'production') {
     // swagger documentation
     const config = new DocumentBuilder()

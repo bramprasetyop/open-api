@@ -16,7 +16,7 @@ import {
 } from './dto';
 import { OpenApisService } from './service/openApis.service';
 
-@Controller()
+@Controller('v1')
 @ApiTags('Open-api')
 @ApiBearerAuth()
 export class OpenApisController {
