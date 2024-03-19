@@ -1,116 +1,85 @@
-import {
-  AllowNull,
-  Column,
-  DataType,
-  Default,
-  Model,
-  Table
-} from 'sequelize-typescript';
+import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
-  tableName: 'm_oauth_key',
-  timestamps: false
+  tableName: 'partners',
+  timestamps: true,
+  paranoid: true
 })
-export class MOAuthKey extends Model<MOAuthKey> {
-  @Default(DataType.BIGINT)
+export class Partner extends Model<Partner> {
   @Column({
-    type: DataType.BIGINT,
+    type: DataType.UUID,
     primaryKey: true,
-    autoIncrement: true,
-    allowNull: false,
+    defaultValue: DataType.UUIDV4,
     field: 'id'
   })
-  id: number;
+  id: string;
 
   @Column({
-    type: DataType.STRING(225),
+    type: DataType.STRING,
     allowNull: false,
-    field: 'client_id'
+    field: 'company_name'
   })
-  clientId: string;
+  companyName: string;
 
   @Column({
-    type: DataType.STRING(50),
-    allowNull: false,
-    field: 'name'
-  })
-  name: string;
-
-  @Column({
-    type: DataType.TEXT,
-    allowNull: false,
+    type: DataType.TEXT('long'),
+    allowNull: true,
     field: 'private_key'
   })
   privateKey: string;
 
   @Column({
-    type: DataType.TEXT,
-    allowNull: false,
+    type: DataType.TEXT('long'),
+    allowNull: true,
     field: 'public_key'
   })
   publicKey: string;
 
   @Column({
-    type: DataType.STRING(50),
-    allowNull: false,
-    field: 'grant_type'
+    type: DataType.BOOLEAN,
+    defaultValue: true,
+    field: 'is_active'
   })
-  grantType: string;
+  isActive: boolean;
 
   @Column({
-    type: DataType.STRING(15),
+    type: DataType.DATE,
+    allowNull: false,
+    defaultValue: DataType.NOW,
+    field: 'created_at'
+  })
+  createdAt: Date;
+
+  @Column({
+    type: DataType.STRING,
     allowNull: false,
     field: 'created_by'
   })
   createdBy: string;
 
-  @AllowNull(false)
-  @Default(DataType.NOW)
   @Column({
     type: DataType.DATE,
-    field: 'created_date'
+    allowNull: true,
+    field: 'updated_at'
   })
-  createdDate: Date;
+  updatedAt: Date;
 
   @Column({
-    type: DataType.STRING(15),
-    allowNull: false,
-    field: 'modified_by'
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'updated_by'
   })
-  modifiedBy: string;
+  updatedBy: string;
 
-  @AllowNull(false)
-  @Default(DataType.NOW)
   @Column({
     type: DataType.DATE,
-    field: 'modified_date'
+    field: 'deleted_at'
   })
-  modifiedDate: Date;
+  deletedAt: Date;
 
   @Column({
-    type: DataType.CHAR(1),
-    allowNull: false,
-    field: 'is_active'
+    type: DataType.STRING,
+    field: 'deleted_by'
   })
-  isActive: string;
-
-  @Column({
-    type: DataType.TEXT,
-    allowNull: false,
-    field: 'public_key_bank'
-  })
-  publicKeyBank: string;
-
-  @Column({
-    type: DataType.TEXT,
-    allowNull: false,
-    field: 'private_key_bank'
-  })
-  privateKeyBank: string;
-
-  @Column({
-    type: DataType.STRING(255),
-    field: 'client_id_bank'
-  })
-  clientIdBank: string;
+  deletedBy: string;
 }

@@ -1,4 +1,4 @@
-import { MOAuthKey } from '@src/open-api/entity/openApi.entity';
+import { Partner } from '@src/open-api/entity/openApi.entity';
 import { Sequelize } from 'sequelize-typescript';
 
 import { SEQUELIZE } from '../constants';
@@ -27,7 +27,9 @@ export const databaseProviders = [
           idle: 10000
         };
       }
-      sequelize.addModels([MOAuthKey]);
+      sequelize.addModels([Partner]);
+      // uncomment for auto syncronize
+      // await sequelize.sync();
       return sequelize;
     }
   }

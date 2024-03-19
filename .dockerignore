@@ -1,6 +1,7 @@
 Dockerfile
 .dockerignore
 node_modules
+yarn-debug.log
 npm-debug.log
 dist
 /logs

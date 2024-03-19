@@ -1,13 +1,18 @@
 import { InjectQueue } from '@nestjs/bull';
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException
 } from '@nestjs/common';
+import { OPEN_API_REPOSITORY } from '@src/core/constants';
 import { LoggerService } from '@src/core/service/logger/logger.service';
 import { Queue } from 'bull';
+import * as crypto from 'crypto';
 import * as dotenv from 'dotenv';
 import * as moment from 'moment';
+
+import { Partner } from '../entity/openApi.entity';
 
 dotenv.config();
 
@@ -15,8 +20,60 @@ dotenv.config();
 export class OpenApisService {
   constructor(
     private readonly logger: LoggerService,
-    @InjectQueue('openApiQueue') private openApiQueue: Queue
+    @InjectQueue('openApiQueue') private openApiQueue: Queue,
+    @Inject(OPEN_API_REPOSITORY)
+    private readonly openApiRepository: typeof Partner
   ) {}
+
+  async generateKeyPair() {
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+      modulusLength: 2048,
+      publicKeyEncoding: { type: 'spki', format: 'pem' },
+      privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+    });
+
+    return { privateKey, publicKey };
+  }
+
+  async create(dto: any): Promise<any> {
+    const t = await this.openApiRepository.sequelize.transaction();
+
+    try {
+      this.logger.log(
+        'starting create openApi through BullMQ',
+        '===running==='
+      );
+
+      const { privateKey, publicKey } = await this.generateKeyPair();
+
+      const createdOpenApi = await this.openApiRepository.create(
+        { ...dto, privateKey, publicKey, createdBy: 'SYS' },
+        { transaction: t }
+      );
+
+      await t.commit();
+
+      this.logger.log(
+        'success add openApi to db',
+        JSON.stringify(createdOpenApi, null, 2)
+      );
+
+      return {
+        status_code: 201,
+        status_description: 'Add partner success!',
+        data: createdOpenApi
+      };
+    } catch (error) {
+      await t.rollback();
+
+      this.logger.error(
+        'error create openApi through BullMQ',
+        'error ===>',
+        JSON.stringify(error, null, 2)
+      );
+      throw new Error(error.message);
+    }
+  }
 
   private async isTimestampValid(timestamp: string): Promise<boolean> {
     if (/^(\d{4})-(\d{2})-(\d{2})$/.test(timestamp)) {

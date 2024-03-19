@@ -19,7 +19,10 @@ RUN npm config set "strict-ssl" false -g
 RUN npm install node-pre-gyp -g
 
 # Install application dependencies
-RUN npm install
+RUN npm install yarn
+
+# Install application dependencies
+RUN yarn install
 
 # Build arguments for username and password gitsource repo
 ARG USERNAME=
@@ -36,7 +39,7 @@ RUN sudo git clone -b external/be-eli-open-api https://${USERNAME}:${PASSWORD}@g
 COPY . .
 
 # Build the application (if needed)
-RUN npm run build
+RUN yarn run build
 
 # Specify the command to run the application in production mode
 CMD [ "node", "dist/main.js" ]

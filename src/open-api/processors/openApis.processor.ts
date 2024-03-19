@@ -8,13 +8,13 @@ import * as crypto from 'crypto';
 import { createHmac } from 'crypto';
 import * as jsonminify from 'jsonminify';
 
-import { MOAuthKey } from '../entity/openApi.entity';
+import { Partner } from '../entity/openApi.entity';
 
 @Processor('openApiQueue')
 export class OpenApiProcessor {
   constructor(
     @Inject(OPEN_API_REPOSITORY)
-    private readonly openApiRepository: typeof MOAuthKey,
+    private readonly openApiRepository: typeof Partner,
     private readonly logger: LoggerService,
     private readonly jwtService: JwtService
   ) {}
@@ -64,10 +64,10 @@ export class OpenApiProcessor {
     signature: string
   ): Promise<boolean> {
     try {
-      const clientId = data.split('|')[0];
+      const id = data.split('|')[0];
       const publicKey = await this.openApiRepository.findOne({
         where: {
-          clientId
+          id
         }
       });
       const verify = crypto.createVerify('RSA-SHA256');
@@ -128,7 +128,7 @@ export class OpenApiProcessor {
 
       const client = await this.openApiRepository.findOne({
         where: {
-          clientId
+          id: clientId
         }
       });
 
@@ -161,7 +161,7 @@ export class OpenApiProcessor {
 
       const isClientIdExist = await this.openApiRepository.findOne({
         where: {
-          clientId
+          id: clientId
         }
       });
 

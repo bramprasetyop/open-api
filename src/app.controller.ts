@@ -2,7 +2,7 @@
 import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
 import { Response } from 'express';
 
-@Controller()
+@Controller('v1')
 export class HomeController {
   @Get()
   getHello(@Res() res: Response): void {

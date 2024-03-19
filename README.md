@@ -9,7 +9,7 @@ This readme provides detailed instructions for setting up and running a NestJS a
 To install the necessary dependencies, run the following command:
 
 ```bash
-npm install
+yarn install
 ```
 
 ## ENV File
@@ -21,7 +21,7 @@ For adding the environment file with dependencies, please refer to the following
 To run the NestJS application locally, execute the following command:
 
 ```bash
-npm run start:dev
+yarn run start:dev
 ```
 
 This will start the development server, and your application will be accessible at: [localhost:3001](http://localhost:3001/)
@@ -37,7 +37,7 @@ This will start the development server, and your application will be accessible 
 - Run the following command to build and run the Docker container:
 
 ```bash
-npm run docker:dev
+yarn run docker:dev
 ```
 
 This command will build the Docker image and start the containerized application. Access your application at [localhost:3001](http://localhost:3001/) within the Docker environment.

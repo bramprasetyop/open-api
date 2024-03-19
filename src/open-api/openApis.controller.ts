@@ -22,6 +22,15 @@ import { OpenApisService } from './service/openApis.service';
 export class OpenApisController {
   constructor(private openApi: OpenApisService) {}
 
+  @Post('/add-partner')
+  async create(@Body() body: any): Promise<any> {
+    try {
+      return await this.openApi.create(body);
+    } catch (error) {
+      throw new InternalServerErrorException(error?.message);
+    }
+  }
+
   @Post('/signature')
   async generateSignature(
     @Body() body: { clientId: string; timestamp: string }
