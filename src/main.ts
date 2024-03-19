@@ -38,6 +38,6 @@ async function bootstrap() {
   app.useGlobalFilters(new ExceptionMiddleware());
 
   const server = await app.listen(process.env.APP_PORT);
-  server.setTimeout(600000); // set default timeout 10 minutes
+  server.setTimeout(120000); // set default timeout 2 minutes
 }
 bootstrap();

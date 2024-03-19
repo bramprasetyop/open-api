@@ -8,19 +8,10 @@ services:
       dockerfile: Dockerfile.dev
     restart: always
     ports:
-      - '3005:3005'
+      - '3002:3002'
     volumes:
       - ./src:/app/src
       - ./logs:/app/logs
-    networks:
-      - open-api-network
-
-  eli-open-api-redis:
-    image: redis:7.2.2-alpine
-    container_name: eli-open-api-redis
-    restart: on-failure
-    ports:
-      - 6377:6379
     networks:
       - open-api-network
 
@@ -33,7 +24,7 @@ services:
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: user
-      POSTGRES_DB: db_payment
+      POSTGRES_DB: eli_partners
     networks:
       - open-api-network
 

@@ -30,7 +30,5 @@ export const checkConfigService = () =>
     'DB_DIALECT',
     'DB_NAME',
     'JWT_KEY',
-    'TOKEN_EXPIRATION',
-    'REDIS_HOST',
-    'REDIS_PORT'
+    'TOKEN_EXPIRATION'
   ]);

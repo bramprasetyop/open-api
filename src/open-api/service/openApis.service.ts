@@ -1,15 +1,16 @@
-import { InjectQueue } from '@nestjs/bull';
 import {
   BadRequestException,
   Inject,
   Injectable,
   NotFoundException
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { OPEN_API_REPOSITORY } from '@src/core/constants';
 import { LoggerService } from '@src/core/service/logger/logger.service';
-import { Queue } from 'bull';
 import * as crypto from 'crypto';
+import { createHmac } from 'crypto';
 import * as dotenv from 'dotenv';
+import * as jsonminify from 'jsonminify';
 import * as moment from 'moment';
 
 import { Partner } from '../entity/openApi.entity';
@@ -20,9 +21,9 @@ dotenv.config();
 export class OpenApisService {
   constructor(
     private readonly logger: LoggerService,
-    @InjectQueue('openApiQueue') private openApiQueue: Queue,
     @Inject(OPEN_API_REPOSITORY)
-    private readonly openApiRepository: typeof Partner
+    private readonly openApiRepository: typeof Partner,
+    private readonly jwtService: JwtService
   ) {}
 
   async generateKeyPair() {
@@ -35,14 +36,112 @@ export class OpenApisService {
     return { privateKey, publicKey };
   }
 
+  private async createToken(payload: string): Promise<any> {
+    try {
+      const accessToken = this.jwtService.sign({ payload });
+      const decodedToken: any = this.jwtService.decode(accessToken, {
+        json: true
+      });
+      const expirationTimeInSeconds = decodedToken?.exp;
+      return { accessToken: accessToken, expired: expirationTimeInSeconds };
+    } catch (error) {
+      this.logger.error(
+        '===== Error create token =====',
+        `Error: `,
+        JSON.stringify(error, null, 2)
+      );
+      throw new Error('generate access token error');
+    }
+  }
+
+  private async verifySignature(
+    data: string,
+    signature: string
+  ): Promise<boolean> {
+    try {
+      const id = data.split('|')[0];
+      const publicKey = await this.openApiRepository.findOne({
+        where: { id },
+        attributes: ['publicKey']
+      });
+      const verify = crypto.createVerify('RSA-SHA256');
+      verify.update(data);
+      return verify.verify(publicKey?.publicKey, signature, 'base64');
+    } catch (error) {
+      this.logger.error(
+        '===== Error verify signature =====',
+        `Error: `,
+        JSON.stringify(error, null, 2)
+      );
+      return false;
+    }
+  }
+
+  private async generateSymmetricStringToSign(
+    httpMethod: string,
+    relativeUrl: string,
+    accessToken: string,
+    body: any,
+    timestamp: string
+  ) {
+    const token = accessToken.split(' ')[1];
+    const jsonString = typeof body === 'string' ? body : JSON.stringify(body);
+    const minifiedJson = jsonminify(jsonString);
+    const sha256hash = crypto
+      .createHash('sha256')
+      .update(minifiedJson)
+      .digest('hex');
+    const lowercaseHex = sha256hash.toLowerCase();
+    const stringToSign = `${httpMethod}:${relativeUrl}:${token}:${lowercaseHex}:${timestamp}`;
+    this.logger.log(
+      '[ Success Generate Symmetric String To Signature] : ',
+      stringToSign
+    );
+    return stringToSign;
+  }
+
+  private async verifySymmetricSignature(
+    signature: string,
+    accessToken: string,
+    relativeUrl: string,
+    body: any,
+    timestamp: string
+  ) {
+    const receivedSignature = signature;
+
+    const stringToSign = await this.generateSymmetricStringToSign(
+      'POST',
+      relativeUrl,
+      accessToken,
+      body,
+      timestamp
+    );
+    const generatedSignature =
+      await this.generateSymmetricSignatureFunc(stringToSign);
+
+    return generatedSignature === receivedSignature && true;
+  }
+
+  private async hmacSha512(secret: string, data: string): Promise<string> {
+    const hmac = createHmac('sha512', secret);
+    hmac.update(data);
+    return hmac.digest('base64');
+  }
+
+  private async generateSymmetricSignatureFunc(stringToSign: string) {
+    const clientSecret = process.env.JWT_KEY;
+
+    const hmac = await this.hmacSha512(clientSecret, stringToSign);
+    const signature = hmac;
+    this.logger.log('[ Success Generate Symmetric] : ', signature);
+    return signature;
+  }
+
   async create(dto: any): Promise<any> {
     const t = await this.openApiRepository.sequelize.transaction();
 
     try {
-      this.logger.log(
-        'starting create openApi through BullMQ',
-        '===running==='
-      );
+      this.logger.log('starting create partner', '===running===');
 
       const { privateKey, publicKey } = await this.generateKeyPair();
 
@@ -54,7 +153,7 @@ export class OpenApisService {
       await t.commit();
 
       this.logger.log(
-        'success add openApi to db',
+        'success add partner to db',
         JSON.stringify(createdOpenApi, null, 2)
       );
 
@@ -67,7 +166,7 @@ export class OpenApisService {
       await t.rollback();
 
       this.logger.error(
-        'error create openApi through BullMQ',
+        'error add partner',
         'error ===>',
         JSON.stringify(error, null, 2)
       );
@@ -91,15 +190,23 @@ export class OpenApisService {
         throw new NotFoundException('invalid field timestamp format');
       }
 
-      const dto = { clientId, timestamp };
-      let response = null;
-      const job = await this.openApiQueue.add('generateSignatureQueue', dto);
+      const client = await this.openApiRepository.findOne({
+        where: { id: clientId },
+        attributes: ['privateKey']
+      });
 
-      response = await job.finished();
-      this.logger.log('[ Success Generate Signature] : ', response);
+      if (!client) {
+        throw new NotFoundException('Unauthorized. [Unknown client]');
+      }
+      const sign = crypto.createSign('RSA-SHA256');
+      const stringToSign = `${clientId}|${timestamp}`;
+
+      sign.update(stringToSign);
+      const signature = sign.sign(client.privateKey, 'base64');
+
       return {
         status_description: 'generate signature success',
-        data: response
+        data: { signature }
       };
     } catch (error) {
       this.logger.error(
@@ -112,6 +219,8 @@ export class OpenApisService {
   }
 
   async generateAccessToken(data: any) {
+    const { clientId, signature, timestamp } = data;
+
     try {
       const isValid = await this.isTimestampValid(data?.timestamp);
       if (!isValid) {
@@ -120,12 +229,22 @@ export class OpenApisService {
 
       let response = null;
       if (data?.grantType === 'client_credentials') {
-        const job = await this.openApiQueue.add(
-          'generateAccessTokenQueue',
-          data
-        );
+        const isClientIdExist = await this.openApiRepository.findOne({
+          where: { id: clientId },
+          attributes: ['privateKey']
+        });
 
-        response = await job.finished();
+        if (!isClientIdExist) {
+          throw new NotFoundException('Unauthorized. [Unknown client]');
+        }
+
+        const stringToSign = `${clientId}|${timestamp}`;
+        const isVerify = await this.verifySignature(stringToSign, signature);
+
+        if (!isVerify) {
+          throw new NotFoundException('Unauthorized. [X-SIGNATURE]');
+        }
+        response = await this.createToken(stringToSign);
       } else {
         this.logger.error(
           'grant type',
@@ -151,21 +270,23 @@ export class OpenApisService {
 
   async generateSymmetricSignature(data: any, body: any) {
     try {
-      const { timestamp } = data;
+      const { relativeUrl, accessToken, timestamp } = data;
       const isValid = await this.isTimestampValid(timestamp);
       if (!isValid) {
         throw new NotFoundException('invalid field timestamp [X-TIMESTAMP]');
       }
 
-      const dto = { data, body };
-
       let response = null;
-      const job = await this.openApiQueue.add(
-        'generateSymmetricSignatureQueue',
-        dto
+
+      const stringToSign = await this.generateSymmetricStringToSign(
+        'POST',
+        relativeUrl,
+        accessToken,
+        body,
+        timestamp
       );
 
-      response = await job.finished();
+      response = await this.generateSymmetricSignatureFunc(stringToSign);
 
       return {
         status_description: 'generate symmetric signature success',
@@ -183,20 +304,19 @@ export class OpenApisService {
 
   async symmetricSignature(data: any, body: any) {
     try {
-      const { timestamp } = data;
-      const dto = { data, body };
+      const { signature, relativeUrl, accessToken, timestamp } = data;
       const isValid = await this.isTimestampValid(timestamp);
       if (!isValid) {
         throw new NotFoundException('invalid field timestamp [X-TIMESTAMP]');
       }
 
-      let response = null;
-      const job = await this.openApiQueue.add(
-        'verifySymmetricSignatureQueue',
-        dto
+      const response = await this.verifySymmetricSignature(
+        signature,
+        accessToken,
+        relativeUrl,
+        body,
+        timestamp
       );
-
-      response = await job.finished();
 
       if (!response) {
         throw new BadRequestException(
