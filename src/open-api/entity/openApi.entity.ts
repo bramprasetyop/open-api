@@ -17,9 +17,9 @@ export class Partner extends Model<Partner> {
   @Column({
     type: DataType.STRING,
     allowNull: false,
-    field: 'company_name'
+    field: 'name'
   })
-  companyName: string;
+  name: string;
 
   @Column({
     type: DataType.TEXT('long'),

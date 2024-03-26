@@ -5,9 +5,11 @@ import {
   Post,
   UseGuards
 } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@src/auth/jwt-auth.guard';
 import { RequestHeader } from '@src/core/service/customDecorator/headers';
+import { ParseMessagePipe } from '@src/core/service/kafka/consumer/parse-message.pipe';
 
 import {
   OpenAPIAccessTokenHeaderRequest,
@@ -21,6 +23,11 @@ import { OpenApisService } from './service/openApis.service';
 @ApiBearerAuth()
 export class OpenApisController {
   constructor(private openApi: OpenApisService) {}
+
+  @MessagePattern('create-partner-topic')
+  pdfGeneratorResponse(@Payload(new ParseMessagePipe()) body): void {
+    this.openApi.create(body);
+  }
 
   @Post('/add-partner')
   async create(@Body() body: any): Promise<any> {
